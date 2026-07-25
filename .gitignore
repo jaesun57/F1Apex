@@ -8,11 +8,9 @@ runs/
 **/constant/polyMesh/
 **/postProcessing/
 
-# OpenFOAM time directories (0.orig and 0 templates are committed explicitly below)
-**/[1-9]*/
-!src/**
-!docs/**
-!tests/**
+# OpenFOAM time directories live under runs/ and are covered above. Deliberately
+# no broad `**/[0-9]*/` rule here — it would silently swallow any source
+# directory starting with a digit.
 
 # ---------------------------------------------------------------------------
 # Generated geometry — deterministic functions of committed parameters,
