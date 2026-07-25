@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "f1apex"
+version = "0.1.0"
+description = "CFD-backed analysis of a Formula 1 front wing"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "jinja2>=3.1",
+    # B-rep CAD kernel (OpenCascade). Booleans and lofts are kernel operations
+    # rather than hand-rolled mesh surgery, which is what makes the parametric
+    # sweep robust across the full flap-angle range.
+    "build123d>=0.11",
+    # VTK polydata handling. We only ever read the .vtp surfaces that
+    # OpenFOAM's own `surfaces` function object writes - never the volume
+    # format - so the fragile third-party OpenFOAM reader is off the path.
+    "pyvista>=0.44",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
