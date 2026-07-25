@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------
+# CFD run output — never committed.
+# A single 3M-cell case is 2-5 GB of time directories. The sweep is ~19 cases.
+# ---------------------------------------------------------------------------
+runs/
+*.foam
+**/processor*/
+**/constant/polyMesh/
+**/postProcessing/
+
+# OpenFOAM time directories (0.orig and 0 templates are committed explicitly below)
+**/[1-9]*/
+!src/**
+!docs/**
+!tests/**
+
+# ---------------------------------------------------------------------------
+# Generated geometry — deterministic functions of committed parameters,
+# so regenerable and worth nothing in history.
+# ---------------------------------------------------------------------------
+*.stl
+*.step
+*.brep
+!src/f1apex/validation/reference_geometry/*.stl
+
+# VTK / post-processing intermediates
+*.vtk
+*.vtp
+*.vtu
+*.pvd
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ---------------------------------------------------------------------------
+# macOS / editor
+# ---------------------------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
