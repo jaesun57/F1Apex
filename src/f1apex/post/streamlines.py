@@ -134,11 +134,16 @@ def render(
         p = pv.Plotter(off_screen=True, window_size=window)
         p.set_background("#07090d")
         # Ground plane first, so streamlines passing under the body read as
-        # being in a channel rather than floating in space.
-        gx0, gx1 = -0.8, 2.2
+        # being in a channel rather than floating in space. Sized from the body
+        # rather than fixed, so the same call works for a 0.4 m block and a
+        # 5.5 m car.
+        bx0, bx1, by0, by1, _, _ = body.bounds
+        blen = bx1 - bx0
+        gx0, gx1 = bx0 - 1.2 * blen, bx1 + 2.6 * blen
         ground = pv.Plane(
             center=((gx0 + gx1) / 2, 0.0, 0.0), direction=(0, 0, 1),
-            i_size=(gx1 - gx0), j_size=1.4, i_resolution=1, j_resolution=1,
+            i_size=(gx1 - gx0), j_size=4.5 * max(by1 - by0, 1e-6),
+            i_resolution=1, j_resolution=1,
         )
         p.add_mesh(ground, color="#161b24", ambient=0.35, diffuse=0.2)
         p.add_mesh(

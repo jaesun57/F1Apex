@@ -1,0 +1,26 @@
+{
+  "images": {
+    "hero": "docs/img/car01/streamlines_hero.png",
+    "side": "docs/img/car01/streamlines_side.png",
+    "top": "docs/img/car01/streamlines_top.png",
+    "rear": "docs/img/car01/streamlines_rear.png",
+    "front": "docs/img/car01/streamlines_front.png"
+  },
+  "forces": {
+    "Cd": 0.696371127535,
+    "Cl": 0.36231117273999996,
+    "Cl_downforce": -0.36231117273999996,
+    "CmPitch": -0.136690248943,
+    "CoP_x": 2.075001892712816,
+    "LD": -0.5202845988496128,
+    "n_iterations": 300,
+    "window": 200
+  },
+  "convergence": {
+    "n_iterations": 300,
+    "window": 200,
+    "converged": false,
+    "metrics": {},
+    "reason": "only 300 iterations, need 400"
+  }
+}
