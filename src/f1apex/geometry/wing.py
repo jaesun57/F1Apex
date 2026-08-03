@@ -293,7 +293,11 @@ def solve_flap_offset(p: WingParams, tol: float = 1e-6, max_iter: int = 60) -> f
             hi = mid
         if hi - lo < tol:
             break
-    return 0.5 * (lo + hi)
+    # Return `hi`, the bracket end that satisfies the request, rather than the
+    # midpoint. The invariant is achieved >= requested: converging from below
+    # leaves the gap fractionally short, which at the design point of exactly
+    # MIN_CELLS_ACROSS_SLOT rounds down to one cell fewer than intended.
+    return hi
 
 
 def sections_for(p: WingParams) -> tuple[np.ndarray, np.ndarray]:
