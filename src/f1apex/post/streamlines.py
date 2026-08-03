@@ -75,13 +75,18 @@ def load_volume(case_dir: Path) -> pv.DataSet:
     return mesh
 
 
-def trace(mesh: pv.DataSet, rake: SeedRake, max_time: float = 0.6) -> pv.PolyData:
+def trace(mesh: pv.DataSet, rake: SeedRake, max_length: float = 8.0) -> pv.PolyData:
+    """Integrate streamlines from the rake.
+
+    `max_length` is an arc length in metres, not a time. It should comfortably
+    exceed the streamwise extent of the domain, otherwise lines stop partway
+    and the picture shows a wake that simply is not there.
+    """
     lines = mesh.streamlines_from_source(
         rake.points(),
         vectors="U",
         integration_direction="forward",
-        max_time=max_time,
-        initial_step_length=0.02,
+        max_length=max_length,
         terminal_speed=1e-3,
     )
     if lines.n_points == 0:
@@ -90,11 +95,14 @@ def trace(mesh: pv.DataSet, rake: SeedRake, max_time: float = 0.6) -> pv.PolyDat
     return lines
 
 
+# Framed on the body, not on the domain. The domain is ~10 body-lengths long,
+# so a camera that fits all of it renders the body a few pixels across and the
+# streamlines collapse into a featureless curtain.
 VIEWS = {
-    "hero":  dict(position=(-1.4, -1.5, 0.85), focal=(0.55, 0.0, 0.12), up=(0, 0, 1)),
-    "side":  dict(position=(0.5, -3.0, 0.30), focal=(0.55, 0.0, 0.10), up=(0, 0, 1)),
-    "top":   dict(position=(0.55, 0.0, 3.0), focal=(0.55, 0.0, 0.10), up=(1, 0, 0)),
-    "front": dict(position=(-2.4, -0.5, 0.55), focal=(0.6, 0.0, 0.10), up=(0, 0, 1)),
+    "hero":  dict(position=(-1.05, -1.40, 0.78), focal=(0.50, 0.0, 0.07), up=(0, 0, 1)),
+    "side":  dict(position=(0.45, -2.10, 0.22), focal=(0.55, 0.0, 0.09), up=(0, 0, 1)),
+    "top":   dict(position=(0.50, 0.0, 2.10), focal=(0.50, 0.0, 0.09), up=(1, 0, 0)),
+    "rear":  dict(position=(2.15, -1.15, 0.60), focal=(0.45, 0.0, 0.09), up=(0, 0, 1)),
 }
 
 
@@ -103,7 +111,7 @@ def render(
     body: pv.DataSet,
     out_dir: Path,
     views: dict | None = None,
-    tube_radius: float = 0.0022,
+    tube_radius: float = 0.0016,
     clim: tuple[float, float] | None = None,
     cmap: str = "turbo",
     window: tuple[int, int] = (1600, 1000),
@@ -125,13 +133,21 @@ def render(
     for name, cam in views.items():
         p = pv.Plotter(off_screen=True, window_size=window)
         p.set_background("#07090d")
+        # Ground plane first, so streamlines passing under the body read as
+        # being in a channel rather than floating in space.
+        gx0, gx1 = -0.8, 2.2
+        ground = pv.Plane(
+            center=((gx0 + gx1) / 2, 0.0, 0.0), direction=(0, 0, 1),
+            i_size=(gx1 - gx0), j_size=1.4, i_resolution=1, j_resolution=1,
+        )
+        p.add_mesh(ground, color="#161b24", ambient=0.35, diffuse=0.2)
         p.add_mesh(
             body,
             color="#e8ecf2",
             specular=0.5,
             specular_power=25,
             smooth_shading=False,
-            ambient=0.25,
+            ambient=0.30,
         )
         p.add_mesh(
             tubes,

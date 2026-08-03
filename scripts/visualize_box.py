@@ -30,14 +30,14 @@ def main() -> int:
     # body so some lines engage it and some pass by for reference.
     rake = streamlines.SeedRake(
         x=b["x"][0] - 0.55,
-        y_half=1.7 * (b["y"][1] - b["y"][0]) / 2.0,
+        y_half=1.45 * (b["y"][1] - b["y"][0]) / 2.0,
         z_min=0.004,
-        z_max=b["z"][1] * 1.45,
-        n_y=30,
-        n_z=15,
+        z_max=b["z"][1] * 1.25,
+        n_y=17,
+        n_z=9,
     )
     print(f"seeding {rake.n_y * rake.n_z} streamlines at x={rake.x:.3f} ...")
-    lines = streamlines.trace(mesh, rake, max_time=0.6)
+    lines = streamlines.trace(mesh, rake, max_length=2.0)
     print(f"  traced {lines.n_lines:,} lines / {lines.n_points:,} points")
     print(f"  speed range {lines['speed'].min():.1f} - {lines['speed'].max():.1f} m/s")
 
@@ -45,7 +45,7 @@ def main() -> int:
         lines,
         streamlines.body_surface(b),
         OUT,
-        clim=(0.0, p.u_inf * 1.35),
+        clim=(0.0, p.u_inf * 1.30),
     )
     for name, path in written.items():
         print(f"  wrote {path}")

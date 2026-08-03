@@ -1,0 +1,25 @@
+{
+  "images": {
+    "hero": "docs/img/box01/streamlines_hero.png",
+    "side": "docs/img/box01/streamlines_side.png",
+    "top": "docs/img/box01/streamlines_top.png",
+    "rear": "docs/img/box01/streamlines_rear.png"
+  },
+  "forces": {
+    "Cd": 0.8998088530749999,
+    "Cl": -0.17431034543499999,
+    "Cl_downforce": 0.17431034543499999,
+    "CmPitch": 0.29645007411499996,
+    "CoP_x": 0.680281077695519,
+    "LD": 0.19371930476046456,
+    "n_iterations": 300,
+    "window": 200
+  },
+  "convergence": {
+    "n_iterations": 300,
+    "window": 200,
+    "converged": false,
+    "metrics": {},
+    "reason": "only 300 iterations, need 400"
+  }
+}

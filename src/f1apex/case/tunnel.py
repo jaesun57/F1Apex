@@ -420,6 +420,10 @@ functions
     {{
         type            yPlus;
         libs            (fieldFunctionObjects);
+        // executeControl must be set explicitly: it defaults to every time
+        // step regardless of writeControl, so without this yPlus is computed
+        // over the whole mesh on every iteration and only written at the end.
+        executeControl  writeTime;
         writeControl    writeTime;
     }}
 
