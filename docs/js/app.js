@@ -119,20 +119,37 @@ function renderSetup(c) {
 function renderConvergence(c) {
   const cv = c.convergence || {};
   const el = $('convergence');
-  if (cv.converged) {
+  const m = cv.metrics || {};
+  const pct = (v) => (v * 100).toFixed(2) + '%';
+  const rows = Object.keys(m).length
+    ? '<div class="convtab">' + Object.entries(m).map(([k, v]) =>
+        `<span>${k}</span><span>scatter ${pct(v.scatter)}</span>` +
+        `<span>drift ${pct(v.drift)}</span>`).join('') + '</div>'
+    : '';
+
+  // Scatter and drift mean different things, so they get different verdicts.
+  if (cv.verdict === 'converged') {
     el.className = 'conv ok';
-    el.innerHTML = '<b>Converged.</b> The force coefficients have stopped changing: ' +
-      'further iterations would not move the answer.';
+    el.innerHTML = '<b>Converged.</b> Both the mean and the instantaneous ' +
+      'coefficients have stopped changing; further iterations would not move ' +
+      'the answer.' + rows;
+  } else if (cv.verdict === 'oscillating') {
+    el.className = 'conv warn';
+    el.innerHTML = '<b>Mean stationary, but oscillating.</b> The mean has ' +
+      'stopped moving (drift is negligible), yet the instantaneous value keeps ' +
+      'swinging about it. That is the solver settling into a limit cycle: a ' +
+      'sharp-edged bluff body genuinely wants to shed vortices, and steady RANS ' +
+      'cannot represent that. <u>The mean below is usable; the instantaneous ' +
+      'value is not</u>, and the oscillation itself is a signal that this flow ' +
+      'is unsteady.' + rows;
+  } else if (cv.reason) {
+    el.className = 'conv';
+    el.innerHTML = `<b>Cannot be judged yet.</b> ${cv.reason}.` + rows;
   } else {
     el.className = 'conv';
-    // Distinguish "not enough data" from "actually still drifting" - reporting
-    // an unknown as a failure would be just as misleading as the reverse.
-    const reason = cv.reason
-      ? `Cannot be judged yet — ${cv.reason}.`
-      : 'the force coefficients are still drifting.';
-    el.innerHTML = `<b>Not converged.</b> ${reason} The values below are the ` +
-                   `mean over the final window: they look settled, but that is ` +
-                   `<u>not demonstrated</u>.`;
+    el.innerHTML = '<b>Still drifting.</b> The mean is still moving between ' +
+      'windows, so the run is simply unfinished and the values below are not ' +
+      'an answer yet.' + rows;
   }
 }
 

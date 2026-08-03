@@ -133,17 +133,44 @@ def convergence(case_dir: Path, name: str = "forceCoeffs", window: int = 200) ->
         out["reason"] = f"only {len(data)} iterations, need {2 * window}"
         return out
 
-    ok = True
+    # Scatter and drift answer different questions and must not be collapsed
+    # into one boolean:
+    #   drift   - is the MEAN still moving? If so the run is simply unfinished.
+    #   scatter - does the instantaneous value oscillate about that mean?
+    # A sharp-edged bluff body genuinely wants to shed vortices. Steady RANS
+    # cannot represent that, so the solver settles into a limit cycle: the mean
+    # stops moving while the instantaneous value keeps swinging. Reporting that
+    # as plain "not converged" would hide a real physical finding, and reporting
+    # it as "converged" would hide that the model is being used outside its
+    # comfort zone. Both facts are kept.
+    steady, stationary = True, True
     for key in ("Cl", "Cd"):
         if key not in cols:
             continue
         series = data[:, cols[key]]
         last, prev = series[-window:], series[-2 * window : -window]
         mean = abs(last.mean()) + 1e-12
-        scatter = last.std() / mean
-        drift = abs(last.mean() - prev.mean()) / mean
-        out["metrics"][key] = {"scatter": float(scatter), "drift": float(drift),
-                               "mean": float(last.mean())}
-        ok &= (scatter < 0.005) and (drift < 0.0025)
-    out["converged"] = bool(ok)
+        scatter = float(last.std() / mean)
+        drift = float(abs(last.mean() - prev.mean()) / mean)
+        out["metrics"][key] = {
+            "scatter": scatter,
+            "drift": drift,
+            "mean": float(last.mean()),
+            "min": float(last.min()),
+            "max": float(last.max()),
+        }
+        stationary &= drift < 0.0025
+        steady &= scatter < 0.005
+
+    if not stationary:
+        verdict = "drifting"
+    elif not steady:
+        verdict = "oscillating"
+    else:
+        verdict = "converged"
+
+    out["verdict"] = verdict
+    out["mean_stationary"] = bool(stationary)
+    # Kept for callers that only want the strict answer.
+    out["converged"] = bool(stationary and steady)
     return out

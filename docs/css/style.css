@@ -122,6 +122,14 @@ canvas#flow {
   background: rgba(255,204,85,.09); border: 1px solid rgba(255,204,85,.28);
   color: var(--warn);
 }
+.conv.warn {
+  background: rgba(255,154,60,.09); border-color: rgba(255,154,60,.30); color: #ffb066;
+}
+.convtab {
+  display: grid; grid-template-columns: auto 1fr 1fr; gap: 3px 10px;
+  margin-top: 9px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.10);
+  font-family: var(--mono); font-size: 11px; opacity: .85;
+}
 .conv.ok { background: rgba(110,231,168,.09); border-color: rgba(110,231,168,.3); color: #6ee7a8; }
 
 #chart { width: 100%; height: 150px; margin-top: 12px; }
