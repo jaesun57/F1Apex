@@ -511,7 +511,8 @@
     "top": "img/box01/streamlines_top.png",
     "rear": "img/box01/streamlines_rear.png",
     "front": "img/box01/streamlines_front.png"
-   }
+   },
+   "tracks": "data/box01_tracks.json"
   }
  ]
 }

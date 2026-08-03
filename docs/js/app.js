@@ -4,7 +4,9 @@
 const $ = (id) => document.getElementById(id);
 const fmt = (v, d = 4) => (v === null || v === undefined || !isFinite(v)) ? '—' : v.toFixed(d);
 
-let anim = null;
+let anim = null;    // 2D canvas particle animation
+let v3d = null;     // 3D WebGL streamline viewer
+let mode = '3d';
 let cases = [];
 
 async function boot() {
@@ -38,6 +40,21 @@ async function loadCase(c) {
 
   if (anim) { anim.stop(); anim = null; }
   try {
+    // 3D streamlines first - it is the default view.
+    if (v3d) { v3d.stop(); v3d = null; }
+    if (c.tracks) {
+      try {
+        const tk = await (await fetch(c.tracks)).json();
+        v3d = new Viewer3D($('gl3d'), tk);
+        window.v3d = v3d;
+        if (mode === '3d') v3d.start();
+      } catch (err) {
+        $('gl3d').hidden = true;
+        console.warn('3D 뷰어를 초기화하지 못했습니다:', err);
+        setMode('2d');
+      }
+    }
+
     const data = await (await fetch(c.field)).json();
     const field = new FlowField(data);
     $('cmax').textContent = field.speedMax.toFixed(1) + ' m/s';
@@ -58,8 +75,9 @@ async function loadCase(c) {
       speedScale: 0.22 * (+$('speedRng').value),
     });
     window.anim = anim;
-    anim.start();
+    if (mode === '2d') anim.start(); else anim.stop();
     $('playBtn').textContent = '일시정지';
+    applyMode();
   } catch (e) {
     const ctx = $('flow').getContext('2d');
     ctx.fillStyle = '#05070c';
@@ -172,11 +190,39 @@ function paintColorbar() {
 }
 
 /* ---- controls ---- */
+function activeView() { return mode === '3d' ? v3d : anim; }
+
 $('playBtn').addEventListener('click', () => {
-  if (!anim) return;
-  if (anim.running) { anim.stop(); $('playBtn').textContent = '재생'; }
-  else { anim.start(); $('playBtn').textContent = '일시정지'; }
+  const v = activeView();
+  if (!v) return;
+  if (v.running) { v.stop(); $('playBtn').textContent = '재생'; }
+  else { v.start(); $('playBtn').textContent = '일시정지'; }
 });
+
+function applyMode() {
+  const is3d = mode === '3d';
+  $('gl3d').hidden = !is3d || !v3d;
+  $('flow').hidden = is3d;
+  $('mode3d').classList.toggle('on', is3d);
+  $('mode2d').classList.toggle('on', !is3d);
+  // Particle count only means anything for the 2D advection view.
+  $('ctlB').style.display = is3d ? 'none' : '';
+  $('vizTitle').innerHTML = is3d
+    ? '3D 유선 <span class="muted">드래그로 회전</span>'
+    : '중앙 단면 유동 <span class="muted">y = 0</span>';
+  $('vizNote').textContent = is3d
+    ? '드래그 = 회전 · 휠 = 확대 · Shift+드래그 = 이동. 색 = 국부 속도, 상한은 99.5 백분위수.'
+    : '실제 속도장을 입자가 이류. 색 = 국부 속도, 상한은 99.5 백분위수(이상치 제외).';
+
+  // Only one loop runs at a time; leaving both animating wastes a core.
+  if (is3d) { if (anim) anim.stop(); if (v3d) { v3d.resize(); v3d.start(); } }
+  else { if (v3d) v3d.stop(); if (anim) { anim.resize(); anim.start(); } }
+  $('playBtn').textContent = '일시정지';
+}
+
+function setMode(m) { mode = m; applyMode(); }
+$('mode3d').addEventListener('click', () => setMode('3d'));
+$('mode2d').addEventListener('click', () => setMode('2d'));
 $('countRng').addEventListener('input', (e) => {
   $('countVal').textContent = e.target.value;
   if (!anim) return;
@@ -185,13 +231,18 @@ $('countRng').addEventListener('input', (e) => {
   anim.particles.length = n;
 });
 $('speedRng').addEventListener('input', (e) => {
-  $('speedVal').textContent = (+e.target.value).toFixed(1) + '×';
-  if (anim) anim.speedScale = 0.22 * (+e.target.value);
+  const v = +e.target.value;
+  $('speedVal').textContent = v.toFixed(1) + '×';
+  if (anim) anim.speedScale = 0.22 * v;
+  if (v3d) v3d.speed = 0.35 * v;
 });
 let rt;
 window.addEventListener('resize', () => {
   clearTimeout(rt);
-  rt = setTimeout(() => { if (anim) anim.resize(); }, 160);
+  rt = setTimeout(() => {
+    if (mode === '2d' && anim) anim.resize();
+    if (mode === '3d' && v3d) v3d.resize();
+  }, 160);
 });
 
 boot();

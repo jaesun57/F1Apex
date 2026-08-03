@@ -14,6 +14,10 @@
 
 * { box-sizing: border-box; }
 
+/* canvas rules set display:block, which overrides the hidden attribute.
+   Without this the inactive view still occupies its full height. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -80,6 +84,17 @@ main {
 .rng input { width: 92px; accent-color: var(--accent); }
 .rng span { font-family: var(--mono); color: var(--dim); min-width: 34px; }
 
+canvas#gl3d {
+  width: 100%; height: 430px; display: block;
+  background: #05070c; border-radius: 6px; border: 1px solid var(--line);
+  cursor: grab; touch-action: none;
+}
+canvas#gl3d:active { cursor: grabbing; }
+.seg { display: flex; gap: 0; }
+.seg .btn { border-radius: 0; }
+.seg .btn:first-child { border-radius: 5px 0 0 5px; }
+.seg .btn:last-child { border-radius: 0 5px 5px 0; border-left: none; }
+.seg .btn.on { background: var(--accent); color: #06121f; border-color: var(--accent); }
 canvas#flow {
   /* Height is set from the field aspect ratio in app.js; this is the
      pre-load placeholder only. */

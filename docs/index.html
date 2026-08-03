@@ -22,25 +22,33 @@
 <main>
   <section class="panel viz">
     <div class="panel-head">
-      <h2>중앙 단면 유동 <span class="muted">y = 0</span></h2>
+      <h2 id="vizTitle">3D 유선 <span class="muted">드래그로 회전</span></h2>
       <div class="controls">
+        <div class="seg">
+          <button id="mode3d" class="btn on">3D</button>
+          <button id="mode2d" class="btn">2D 단면</button>
+        </div>
         <button id="playBtn" class="btn">일시정지</button>
-        <label class="rng">입자
-          <input type="range" id="countRng" min="400" max="6000" step="200" value="2600">
-          <span id="countVal">2600</span>
-        </label>
-        <label class="rng">속도
+        <label class="rng" id="ctlA">흐름
           <input type="range" id="speedRng" min="0.2" max="3" step="0.1" value="1">
           <span id="speedVal">1.0×</span>
         </label>
+        <label class="rng" id="ctlB">입자
+          <input type="range" id="countRng" min="400" max="6000" step="200" value="2600">
+          <span id="countVal">2600</span>
+        </label>
       </div>
     </div>
-    <canvas id="flow"></canvas>
+    <canvas id="gl3d"></canvas>
+    <canvas id="flow" hidden></canvas>
     <div class="legend">
       <span class="lbl">0</span>
       <div id="cbar"></div>
       <span class="lbl" id="cmax">— m/s</span>
-      <span class="note">색 = 국부 속도. 스케일 상한은 99.5 백분위수(이상치 제외).</span>
+      <span class="note" id="vizNote">
+        드래그 = 회전 · 휠 = 확대 · Shift+드래그 = 이동. 색 = 국부 속도,
+        상한은 99.5 백분위수(이상치 제외).
+      </span>
     </div>
   </section>
 
@@ -80,6 +88,7 @@
 </footer>
 
 <script src="js/flow.js"></script>
+<script src="js/gl3d.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
