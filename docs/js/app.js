@@ -36,7 +36,6 @@ async function loadCase(c) {
   renderSetup(c);
   renderConvergence(c);
   renderChart(c);
-  renderShots(c);
 
   if (anim) { anim.stop(); anim = null; }
   try {
@@ -193,13 +192,6 @@ function renderChart(c) {
     const d = s.v.map((v, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join('');
     add('path', { d, fill: 'none', stroke: s.color, 'stroke-width': 1.4 });
   }
-}
-
-function renderShots(c) {
-  const labels = { hero: 'three-quarter', side: 'side', top: 'plan', rear: 'rear', front: 'front' };
-  $('shots').innerHTML = Object.entries(c.images || {}).map(([k, src]) =>
-    `<figure><img src="${src}" alt="${labels[k] || k}" loading="lazy">
-     <figcaption>${labels[k] || k}</figcaption></figure>`).join('');
 }
 
 function paintColorbar() {
