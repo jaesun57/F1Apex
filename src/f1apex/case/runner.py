@@ -75,6 +75,10 @@ run_stage restore0Dir    log.restore0Dir    restore0Dir -processor              
 run_stage checkMesh      log.checkMesh      $M checkMesh -parallel -constant       || true
 run_stage potentialFoam  log.potentialFoam  $M potentialFoam -parallel             || true
 run_stage simpleFoam     log.simpleFoam     $M simpleFoam -parallel                || exit 15
+# The mesh itself must be reconstructed first: snappyHexMesh built it in
+# parallel with -overwrite, so there is no constant/polyMesh at the top level
+# and reconstructPar alone fails.
+run_stage recParMesh     log.recParMesh     reconstructParMesh -constant           || exit 16
 run_stage reconstruct    log.reconstructPar reconstructPar -latestTime             || exit 16
 run_stage foamToVTK      log.foamToVTK      foamToVTK -latestTime                  || exit 17
 T1=$(date +%s)
