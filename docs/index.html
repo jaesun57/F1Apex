@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>F1Apex — CFD 유동 뷰어</title>
+<title>F1Apex — CFD Flow Viewer</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,10 +11,10 @@
 <header class="top">
   <div class="brand">
     <h1>F1Apex</h1>
-    <p class="sub">OpenFOAM RANS 해석 결과 뷰어 — 실제 계산된 속도장을 입자로 가시화</p>
+    <p class="sub">OpenFOAM RANS results — particles advected through the solved velocity field</p>
   </div>
   <div class="caseline">
-    <label for="caseSel">케이스</label>
+    <label for="caseSel">Case</label>
     <select id="caseSel"></select>
   </div>
 </header>
@@ -22,18 +22,18 @@
 <main>
   <section class="panel viz">
     <div class="panel-head">
-      <h2 id="vizTitle">3D 유선 <span class="muted">드래그로 회전</span></h2>
+      <h2 id="vizTitle">3D streamlines <span class="muted">drag to orbit</span></h2>
       <div class="controls">
         <div class="seg">
           <button id="mode3d" class="btn on">3D</button>
-          <button id="mode2d" class="btn">2D 단면</button>
+          <button id="mode2d" class="btn">2D slice</button>
         </div>
-        <button id="playBtn" class="btn">일시정지</button>
-        <label class="rng" id="ctlA">흐름
+        <button id="playBtn" class="btn">Pause</button>
+        <label class="rng" id="ctlA">Flow
           <input type="range" id="speedRng" min="0.2" max="3" step="0.1" value="1">
           <span id="speedVal">1.0×</span>
         </label>
-        <label class="rng" id="ctlB">입자
+        <label class="rng" id="ctlB">Particles
           <input type="range" id="countRng" min="400" max="6000" step="200" value="2600">
           <span id="countVal">2600</span>
         </label>
@@ -46,44 +46,53 @@
       <div id="cbar"></div>
       <span class="lbl" id="cmax">— m/s</span>
       <span class="note" id="vizNote">
-        드래그 = 회전 · 휠 = 확대 · Shift+드래그 = 이동. 색 = 국부 속도,
-        상한은 99.5 백분위수(이상치 제외).
+        Drag to orbit · scroll to zoom · shift-drag to pan. Colour is local
+        speed; the scale tops out at the 99.5th percentile, not the maximum.
       </span>
     </div>
   </section>
 
   <aside class="panel side">
-    <h2>결과</h2>
+    <h2>Results</h2>
     <div class="kv" id="forces"></div>
 
-    <h3>수렴</h3>
+    <h3>Convergence</h3>
     <div id="convergence" class="conv"></div>
     <svg id="chart" viewBox="0 0 320 150" preserveAspectRatio="none"></svg>
-    <p class="chartnote">반복에 따른 <b>C<sub>d</sub></b>(주황) · <b>C<sub>l</sub></b>(파랑)</p>
+    <p class="chartnote"><b>C<sub>d</sub></b> (orange) and <b>C<sub>l</sub></b> (blue) vs iteration</p>
 
-    <h3>해석 조건</h3>
+    <h3>Setup</h3>
     <div class="kv" id="setup"></div>
   </aside>
 </main>
 
 <section class="panel gallery">
-  <h2>3D 유선 렌더</h2>
+  <h2>Rendered 3D streamlines</h2>
   <div id="shots" class="shots"></div>
 </section>
 
 <section class="panel caveat">
-  <h2>이 결과의 한계</h2>
+  <h2>What these results are not</h2>
   <ul id="limits">
-    <li><b>검증되지 않았습니다.</b> 실험/문헌 대조를 아직 하지 않았고, 격자 수렴성(GCI)도 확인하지 않았습니다. 힘 계수는 "블러프 바디로서 자릿수가 맞다" 정도로만 보십시오.</li>
-    <li><b>격자가 거칩니다.</b> 표면 세분화 레벨과 경계층 레이어 수가 실무 기준보다 낮습니다. 벽함수(y⁺ 30–100)를 쓰므로 경계층은 해석되지 않고 모델링됩니다.</li>
-    <li><b>정상상태(RANS)입니다.</b> 후류의 비정상 박리와 와류 탈락은 시간평균되어 사라집니다. 실제 후류는 이 그림보다 훨씬 불안정합니다.</li>
-    <li><b>애니메이션은 정상상태 장을 흐르는 입자입니다.</b> 시간에 따라 변하는 유동이 아니라, 고정된 속도장을 따라가는 궤적입니다. 유선(streamline)이지 자취선(pathline)이 아닙니다.</li>
-    <li><b>중앙 단면만 봅니다.</b> 물체 옆으로 돌아가는 3차원 유동은 이 2D 화면에 나타나지 않습니다 — 그래서 아래 3D 렌더를 같이 봐야 합니다.</li>
+    <li><b>Not validated.</b> Nothing here has been checked against experiment or
+      published data, and no grid-convergence study (GCI) has been run. Treat the
+      force coefficients as the right order of magnitude for a bluff body, not as
+      numbers to quote.</li>
+    <li><b>The mesh is coarse.</b> Surface refinement and boundary-layer counts
+      are below practice. Wall functions (y⁺ 30–100) mean the boundary layer is
+      modelled, not resolved.</li>
+    <li><b>Steady RANS.</b> Unsteady separation and vortex shedding in the wake
+      are time-averaged away. A real wake is far less tidy than this.</li>
+    <li><b>The animation rides a frozen field.</b> Particles follow a fixed,
+      converged velocity field — these are streamlines, not pathlines. Nothing
+      here evolves in time.</li>
+    <li><b>The 2D view is one plane only.</b> Flow going around the sides of the
+      body does not appear in it, which is why the 3D view exists alongside.</li>
   </ul>
 </section>
 
 <footer>
-  <span>OpenFOAM v2506 · simpleFoam · Spalart–Allmaras · 이동 지면(rolling road)</span>
+  <span>OpenFOAM v2506 · simpleFoam · Spalart–Allmaras · moving ground (rolling road)</span>
   <a href="https://github.com/jaesun57/F1Apex">github.com/jaesun57/F1Apex</a>
 </footer>
 

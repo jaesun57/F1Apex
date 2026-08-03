@@ -15,9 +15,9 @@ async function boot() {
     payload = await (await fetch('data/cases.json')).json();
   } catch (e) {
     document.querySelector('main').innerHTML =
-      '<div class="panel"><h2>데이터 없음</h2><p style="color:var(--dim)">' +
-      'data/cases.json 을 읽지 못했습니다. 로컬에서 열었다면 file:// 이 아니라 ' +
-      '<code>python3 -m http.server</code> 로 서빙해야 합니다.</p></div>';
+      '<div class="panel"><h2>No data</h2><p style="color:var(--dim)">' +
+      'Could not read data/cases.json. If you opened this from disk, serve it with ' +
+      '<code>python3 -m http.server</code> rather than a file:// URL.</p></div>';
     return;
   }
   cases = payload.cases || [];
@@ -50,7 +50,7 @@ async function loadCase(c) {
         if (mode === '3d') v3d.start();
       } catch (err) {
         $('gl3d').hidden = true;
-        console.warn('3D 뷰어를 초기화하지 못했습니다:', err);
+        console.warn('could not initialise the 3D viewer:', err);
         setMode('2d');
       }
     }
@@ -76,14 +76,14 @@ async function loadCase(c) {
     });
     window.anim = anim;
     if (mode === '2d') anim.start(); else anim.stop();
-    $('playBtn').textContent = '일시정지';
+    $('playBtn').textContent = 'Pause';
     applyMode();
   } catch (e) {
     const ctx = $('flow').getContext('2d');
     ctx.fillStyle = '#05070c';
     ctx.fillRect(0, 0, $('flow').width, $('flow').height);
     ctx.fillStyle = '#93a0b4'; ctx.font = '14px sans-serif';
-    ctx.fillText('속도장 데이터를 불러오지 못했습니다: ' + e.message, 20, 40);
+    ctx.fillText('Could not load the velocity field: ' + e.message, 20, 40);
   }
 }
 
@@ -91,29 +91,29 @@ function renderForces(c) {
   const f = c.forces || {};
   const down = f.Cl_downforce;
   $('forces').innerHTML = `
-    <div class="k">C<sub>d</sub> (항력)</div><div class="v big">${fmt(f.Cd)}</div>
-    <div class="k">C<sub>l</sub> (원시)</div><div class="v">${fmt(f.Cl)}</div>
-    <div class="k">다운포스</div>
+    <div class="k">C<sub>d</sub> (drag)</div><div class="v big">${fmt(f.Cd)}</div>
+    <div class="k">C<sub>l</sub> (raw)</div><div class="v">${fmt(f.Cl)}</div>
+    <div class="k">Downforce</div>
       <div class="v big ${down > 0 ? 'pos' : 'neg'}">${fmt(down)}</div>
     <div class="k">L/D</div><div class="v">${fmt(f.LD, 3)}</div>
-    <div class="k">압력중심 x</div><div class="v">${fmt(f.CoP_x, 3)} m</div>
-    <div class="k">평균 구간</div>
-      <div class="v">마지막 ${f.window} / ${f.n_iterations}</div>`;
+    <div class="k">Centre of pressure x</div><div class="v">${fmt(f.CoP_x, 3)} m</div>
+    <div class="k">Averaging window</div>
+      <div class="v">last ${f.window} of ${f.n_iterations}</div>`;
 }
 
 function renderSetup(c) {
   const b = c.body || {}, m = c.mesh || {}, s = c.solver || {}, fl = c.flow || {};
   $('setup').innerHTML = `
-    <div class="k">자유류</div><div class="v">${fl.u_inf} m/s</div>
-    <div class="k">요각</div><div class="v">${fl.yaw_deg}°</div>
-    <div class="k">물체 (L×W×H)</div>
+    <div class="k">Freestream</div><div class="v">${fl.u_inf} m/s</div>
+    <div class="k">Yaw</div><div class="v">${fl.yaw_deg}°</div>
+    <div class="k">Body (L×W×H)</div>
       <div class="v">${b.length}×${b.width}×${b.height} m</div>
-    <div class="k">지상고</div><div class="v">${b.ground_clearance} m</div>
-    <div class="k">셀 수</div><div class="v">${(m.cells || 0).toLocaleString()}</div>
-    <div class="k">표면 레벨</div><div class="v">${(m.surface_level || []).join('–')}</div>
-    <div class="k">레이어</div><div class="v">${m.n_layers}</div>
-    <div class="k">난류 모델</div><div class="v">${s.turbulence || '—'}</div>
-    <div class="k">지면</div><div class="v">${s.ground || '—'}</div>`;
+    <div class="k">Ground clearance</div><div class="v">${b.ground_clearance} m</div>
+    <div class="k">Cells</div><div class="v">${(m.cells || 0).toLocaleString()}</div>
+    <div class="k">Surface level</div><div class="v">${(m.surface_level || []).join('–')}</div>
+    <div class="k">Prism layers</div><div class="v">${m.n_layers}</div>
+    <div class="k">Turbulence model</div><div class="v">${s.turbulence || '—'}</div>
+    <div class="k">Ground</div><div class="v">${s.ground || '—'}</div>`;
 }
 
 function renderConvergence(c) {
@@ -121,16 +121,18 @@ function renderConvergence(c) {
   const el = $('convergence');
   if (cv.converged) {
     el.className = 'conv ok';
-    el.innerHTML = '<b>수렴 확인됨.</b> 힘 계수가 정상 상태에 도달했습니다.';
+    el.innerHTML = '<b>Converged.</b> The force coefficients have stopped changing: ' +
+      'further iterations would not move the answer.';
   } else {
     el.className = 'conv';
     // Distinguish "not enough data" from "actually still drifting" - reporting
     // an unknown as a failure would be just as misleading as the reverse.
     const reason = cv.reason
-      ? `판정 불가 — ${cv.reason}.`
-      : '힘 계수가 아직 표류 중입니다.';
-    el.innerHTML = `<b>수렴 미확인.</b> ${reason} 아래 값은 마지막 구간 평균이며, ` +
-                   `안정돼 보이지만 <u>증명되지는 않았습니다</u>.`;
+      ? `Cannot be judged yet — ${cv.reason}.`
+      : 'the force coefficients are still drifting.';
+    el.innerHTML = `<b>Not converged.</b> ${reason} The values below are the ` +
+                   `mean over the final window: they look settled, but that is ` +
+                   `<u>not demonstrated</u>.`;
   }
 }
 
@@ -177,7 +179,7 @@ function renderChart(c) {
 }
 
 function renderShots(c) {
-  const labels = { hero: '3/4 뷰', side: '측면', top: '평면', rear: '후방', front: '전방' };
+  const labels = { hero: 'three-quarter', side: 'side', top: 'plan', rear: 'rear', front: 'front' };
   $('shots').innerHTML = Object.entries(c.images || {}).map(([k, src]) =>
     `<figure><img src="${src}" alt="${labels[k] || k}" loading="lazy">
      <figcaption>${labels[k] || k}</figcaption></figure>`).join('');
@@ -195,8 +197,8 @@ function activeView() { return mode === '3d' ? v3d : anim; }
 $('playBtn').addEventListener('click', () => {
   const v = activeView();
   if (!v) return;
-  if (v.running) { v.stop(); $('playBtn').textContent = '재생'; }
-  else { v.start(); $('playBtn').textContent = '일시정지'; }
+  if (v.running) { v.stop(); $('playBtn').textContent = 'Play'; }
+  else { v.start(); $('playBtn').textContent = 'Pause'; }
 });
 
 function applyMode() {
@@ -208,16 +210,16 @@ function applyMode() {
   // Particle count only means anything for the 2D advection view.
   $('ctlB').style.display = is3d ? 'none' : '';
   $('vizTitle').innerHTML = is3d
-    ? '3D 유선 <span class="muted">드래그로 회전</span>'
-    : '중앙 단면 유동 <span class="muted">y = 0</span>';
+    ? '3D streamlines <span class="muted">drag to orbit</span>'
+    : 'Mid-plane flow <span class="muted">y = 0</span>';
   $('vizNote').textContent = is3d
-    ? '드래그 = 회전 · 휠 = 확대 · Shift+드래그 = 이동. 색 = 국부 속도, 상한은 99.5 백분위수.'
-    : '실제 속도장을 입자가 이류. 색 = 국부 속도, 상한은 99.5 백분위수(이상치 제외).';
+    ? 'Drag to orbit · scroll to zoom · shift-drag to pan. Colour is local speed, scaled to the 99.5th percentile.'
+    : 'Particles advected through the solved velocity field. Colour is local speed, scaled to the 99.5th percentile.';
 
   // Only one loop runs at a time; leaving both animating wastes a core.
   if (is3d) { if (anim) anim.stop(); if (v3d) { v3d.resize(); v3d.start(); } }
   else { if (v3d) v3d.stop(); if (anim) { anim.resize(); anim.start(); } }
-  $('playBtn').textContent = '일시정지';
+  $('playBtn').textContent = 'Pause';
 }
 
 function setMode(m) { mode = m; applyMode(); }

@@ -141,7 +141,7 @@ class Viewer3D {
     this.canvas = canvas;
     this.tracks = tracks;
     const gl = canvas.getContext('webgl', { antialias: true, alpha: false });
-    if (!gl) throw new Error('WebGL을 사용할 수 없습니다');
+    if (!gl) throw new Error('WebGL is not available in this browser');
     this.gl = gl;
 
     this.lineProg = compile(gl, LINE_VS, LINE_FS);
@@ -159,8 +159,12 @@ class Viewer3D {
     ];
     const span = Math.max(b.x[1] - b.x[0], b.z[1] - b.z[0]);
     this.radius = span * 0.95;
-    this.theta = -2.35;    // azimuth, radians
-    this.phi = 0.98;       // polar from +z; raised 3/4 view
+    // Open side-on, matching the 2D mid-plane view exactly: camera on -y,
+    // horizontal, so x runs left-to-right and z is up on screen. Toggling
+    // between 2D and 3D then reads as the same scene rather than two
+    // unrelated pictures. The user can orbit away from here immediately.
+    this.theta = -Math.PI / 2;   // camera on the -y side
+    this.phi = Math.PI / 2;      // horizontal (eye at the target's height)
     this.pulse = 1.0;
     this.spacing = 0.22;   // metres between travelling pulses
     this.speed = 0.35;     // pulses per second
